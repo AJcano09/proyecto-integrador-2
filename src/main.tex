@@ -1,0 +1,57 @@
+\documentclass[12pt,letterpaper,oneside,openany]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-noquoting]{babel}
+\usepackage{lmodern}
+\usepackage{textcomp,amsmath,amssymb}
+\usepackage[paperwidth=612bp,paperheight=792bp,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{graphicx,tikz}
+\usetikzlibrary{positioning,calc}
+\usepackage{booktabs,longtable,array,fvextra,float,setspace}
+\usepackage[hidelinks,unicode]{hyperref}
+\usepackage{xurl}
+\usepackage{bookmark}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\raggedbottom
+\setstretch{1.12}
+\setlength{\parskip}{0.35em}
+\setlength{\emergencystretch}{2em}
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{2}
+\newcommand{\archivo}[1]{\nolinkurl{#1}}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+% Una página usa el fondo vectorial sin texto y texto LaTeX editable.
+\newenvironment{pagina}[1]{\ifcsname entrada#1\endcsname\csname entrada#1\endcsname\fi\noindent\begin{tikzpicture}[remember picture,overlay,x=1bp,y=1bp]
+\node[anchor=south west,inner sep=0] at (current page.south west) {\includegraphics[page=#1,width=612bp,height=792bp]{assets/fondos.pdf}};
+}{\end{tikzpicture}\null\newpage}
+\newcommand{\texto}[5]{\node[anchor=base west,inner sep=0pt,outer sep=0pt] at ([xshift=#1bp,yshift=#2bp]current page.south west) {{#4\fontsize{#3bp}{#3bp}\selectfont #5}};}
+\newcommand{\evidencia}[3]{\IfFileExists{assets/evidencias/#1}{\begin{figure}[htbp]\centering\includegraphics[width=0.95\linewidth,height=0.42\textheight,keepaspectratio]{assets/evidencias/#1}\caption{#2.}\end{figure}}{}}
+\input{entradas-originales}
+\hypersetup{pdftitle={Explora-Nicaragua: Proyecto Integrador II},pdfauthor={Equipo Explora-Nicaragua}}
+\begin{document}
+\newgeometry{margin=0pt}
+\hypersetup{pageanchor=false}
+\input{portada}
+\pagenumbering{roman}
+\input{preliminares}
+\clearpage\restoregeometry
+\pagestyle{plain}
+\hypersetup{pageanchor=true}
+\begingroup\small\setstretch{1.0}\tableofcontents\endgroup
+\clearpage\newgeometry{margin=0pt}
+\pagenumbering{arabic}
+\pagestyle{empty}
+\input{capitulos/01-formulacion}
+\input{capitulos/02-investigacion}
+\input{capitulos/03-emprendimiento}
+\input{capitulos/04-modelado}
+\clearpage\restoregeometry
+\pagestyle{plain}
+\setlength{\parindent}{1.2em}
+\setcounter{chapter}{4}
+\input{capitulos/05-implementacion}
+\input{capitulos/06-resultados}
+\input{capitulos/07-impacto}
+\input{capitulos/08-cierre}
+\end{document}

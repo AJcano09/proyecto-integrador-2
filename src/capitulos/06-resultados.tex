@@ -1,0 +1,33 @@
+\chapter{Resultados del proyecto}
+\label{cap:resultados}
+\section{Resultados obtenidos}
+Se desarrolló una solución de gestión turística organizada en siete proyectos: dominio, aplicación, infraestructura, componentes compartidos, API, cliente del operador y cliente administrativo. Esta organización separa las entidades, los contratos de servicio, la persistencia y las interfaces de usuario. Los dos clientes de escritorio comparten el mismo servidor y la misma base de datos.
+
+Se implementaron autenticación JWT, verificación documental de operadores, gestión de tours y sesiones, creación de reservas, validación de vouchers e indicadores operativos. La persistencia utiliza Entity Framework Core y PostgreSQL. Las migraciones mantienen el esquema de datos, el middleware centraliza las excepciones y los endpoints de salud informan sobre el estado del servidor y la conexión a la base de datos.
+
+El registro de agencias crea expedientes con sus tres tipos documentales y estado de verificación. La gestión del catálogo vincula cada tour con su operador y sus salidas. El proceso de reserva calcula el importe y descuenta disponibilidad dentro de una transacción. La validación del voucher completa la reserva, registra su utilización y genera el evento de auditoría correspondiente.
+
+Se incorporaron dos mecanismos de integridad para las operaciones concurrentes: actualización condicionada del cupo y cambio condicionado de la reserva confirmada a completada. La primera operación evita descontar más plazas de las disponibles; la segunda impide que dos validaciones completen repetidamente la misma reserva. El plan de validación funcional incluye estos recorridos y sus casos de excepción.
+
+\section{Beneficios del sistema}
+El beneficio funcional esperado es concentrar información antes dispersa entre mensajes, registros manuales y archivos independientes. La asociación de operadores, tours, sesiones y reservas permite consultar la operación con una estructura uniforme. La revisión documental facilita un proceso administrativo explícito y los estados de reserva permiten identificar qué servicios siguen confirmados y cuáles fueron atendidos.
+
+Desde el punto de vista técnico, los contratos de aplicación y la API común ofrecen una base para reutilizar servicios desde ambos clientes. La centralización de reglas facilita corregirlas en el servidor. Los mensajes de dominio y la correlación de errores favorecen el diagnóstico; la bitácora existente permite seguir determinadas acciones críticas, aunque su cobertura debe ampliarse.
+
+Para las agencias, la herramienta organiza la oferta, las salidas y las reservas en una interfaz de escritorio. Para la administración, los expedientes y los filtros por estado facilitan la distribución de tareas de verificación. La consulta centralizada permite localizar registros sin recorrer conversaciones o archivos independientes.
+
+\section{Limitaciones del prototipo}
+Los clientes de escritorio funcionan en Windows y necesitan conectividad con la API para las operaciones remotas. Los documentos se almacenan en el servidor mediante un servicio de archivos local. La continuidad operativa requiere respaldar tanto PostgreSQL como los archivos documentales y conservar su correspondencia.
+
+Los pagos en línea, la conciliación, los reembolsos, las reseñas verificadas, los reportes financieros y la aplicación móvil pertenecen a la ampliación funcional del sistema. La reserva actual se confirma desde la API y no ejecuta un cargo de pasarela. El voucher registra el código y su utilización durante el cierre de la reserva; la emisión anticipada y lectura de una imagen QR requieren un flujo específico.
+
+La autenticación utiliza tokens con vencimiento y el servidor no expone un servicio de renovación. El modelo reúne al personal de la agencia bajo el rol TourOperator. La analítica se concentra en conteos de control; el análisis financiero necesita sus propias entidades y reglas. La cancelación de reservas y la cobertura de permisos de todas las rutas requieren fortalecer sus controles de estado y propiedad.
+
+La evolución del prototipo comprende pruebas automatizadas, evaluación de concurrencia, accesibilidad y recuperación ante fallos. La operación comercial también requiere procedimientos de soporte, despliegue, monitoreo y atención de incidencias.
+
+\section{Propuestas de mejora}
+Se propone priorizar cuatro etapas. La primera debe cerrar la coherencia del núcleo: permisos por propiedad en todas las rutas, validación uniforme, cancelación idempotente, renovación segura de sesión y pruebas de disponibilidad y validación concurrentes. La segunda debe completar evidencias: pruebas automatizadas, capturas por módulo y un piloto con datos de demostración y operadores voluntarios.
+
+La tercera etapa puede incorporar pagos en entorno de prueba, estados de pago separados de los de reserva, procesamiento idempotente de eventos, conciliación y manejo de cancelaciones. Los eventos de la pasarela deben validarse y no asumirse únicos ni necesariamente ordenados \cite{ref18}. La selección de proveedor deberá confirmar su disponibilidad comercial y operativa para el proyecto antes de efectuar cobros reales.
+
+La cuarta etapa puede desarrollar reseñas vinculadas a servicios atendidos, reportes de bruto, comisión y neto, interfaz móvil y mejoras de accesibilidad. Cada ampliación necesita criterios de aceptación, responsable y evidencia. El orden prioriza integridad de datos y demostración del núcleo antes de ampliar el catálogo de funciones.

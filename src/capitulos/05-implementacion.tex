@@ -1,0 +1,266 @@
+\chapter{Desarrollo e implementación del prototipo}
+\label{cap:implementacion}
+
+ExploraNica es un sistema de gestión turística desarrollado con .NET 10, Windows Forms, ASP.NET Core, Entity Framework Core y PostgreSQL. Se implementaron dos aplicaciones de escritorio sobre una API común: el backoffice del operador y el panel administrativo. El sistema centraliza el registro de agencias, la gestión documental, el catálogo de tours, la disponibilidad de salidas y la administración de reservas.
+
+La arquitectura distribuye las responsabilidades entre dominio, aplicación, infraestructura y presentación. Las reglas de reserva y validación se ejecutan en el servidor, mientras los clientes presentan formularios, tablas e indicadores para la operación diaria. Las integraciones de pago, reseñas y acceso móvil forman parte del plan de ampliación del producto.
+
+\section{Arquitectura y estructura}
+\subsection{Diagrama de arquitectura}
+La solución comprende dos clientes de escritorio y una API central. El cliente del operador permite gestionar la actividad de la agencia; el cliente administrativo concentra la supervisión. Ambos intercambian datos con la API mediante HTTP y JSON. La API resuelve autenticación, autorización y operaciones del negocio, mientras PostgreSQL conserva los registros. Windows Forms proporciona los controles de interfaz utilizados por los clientes \cite{ref15}.
+
+La organización distingue dominio, aplicación, infraestructura y presentación. El dominio define entidades y estados; aplicación contiene contratos, DTO y validadores; infraestructura implementa servicios, acceso a datos y almacenamiento documental; presentación contiene los controladores HTTP y los formularios de escritorio. La inyección de dependencias conecta las interfaces con sus implementaciones y permite mantener las responsabilidades de cada proyecto.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=11mm,box/.style={draw,rounded corners,align=center,text width=5cm,minimum height=12mm,font=\small},>=stealth]
+\node[box,fill=blue!7] (op) {Cliente del operador\\Windows Forms / .NET 10};
+\node[box,fill=blue!7,right=8mm of op] (ad) {Cliente de administración\\Windows Forms / .NET 10};
+\coordinate (medio) at ($(op)!0.5!(ad)$);
+\node[box,fill=green!8,text width=10.8cm,below=17mm of medio] (api) {API ASP.NET Core: controladores, JWT, autorización\\Contratos y validadores de aplicación / entidades del dominio};
+\node[box,fill=orange!10,text width=10.8cm,below=of api] (infra) {Servicios de infraestructura / Entity Framework Core\\Registro de errores, auditoría y almacenamiento documental};
+\node[box,fill=gray!8,below left=12mm and 3mm of infra.south] (db) {PostgreSQL 16\\Usuarios, operadores, tours, sesiones, reservas y vouchers};
+\node[box,fill=gray!8,below right=12mm and 3mm of infra.south] (files) {Almacenamiento local\\Documentos de operadores};
+\draw[->] (op.south) -- (api.north west);
+\draw[->] (ad.south) -- (api.north east);
+\draw[->] (api) -- (infra);
+\draw[->] (infra) -- (db);
+\draw[->] (infra) -- (files);
+\end{tikzpicture}
+\caption{Arquitectura de ExploraNica y comunicación entre sus componentes.}
+\label{fig:arquitectura-real}
+\end{figure}
+
+JWT identifica al usuario y transporta los atributos de su sesión. La API valida el token y comprueba los permisos antes de ejecutar las operaciones protegidas \cite{ref20}. Los clientes concentran la interacción con el usuario y consumen los servicios mediante solicitudes HTTP con cuerpos JSON.
+
+\clearpage
+\subsection{Estructura de carpetas y archivos}
+La raíz contiene \archivo{ExploraNica.slnx}, \archivo{README.md}, \archivo{docker-compose.yml}, los scripts de preparación y el directorio de documentación \archivo{odd/tasks}. La estructura principal es la siguiente:
+\begin{Verbatim}[fontsize=\small]
+ExploraNica/
+  ExploraNica.slnx
+  README.md
+  docker-compose.yml
+  scripts/
+  odd/tasks/
+  src/
+    Core/
+      ExploraNica.Domain/
+        Entities/  Enums/  Exceptions/  Builders/
+      ExploraNica.Application/
+        DTOs/  Interfaces/  Validators/
+    Infrastructure/
+      ExploraNica.Infrastructure/
+        Services/  Persistence/  Middleware/
+      ExploraNica.Shared/
+        Configuration/  Services/  UI/
+    Presentation/
+      ExploraNica.Api/
+        Controllers/  Middleware/  Health/  OpenApi/
+      ExploraNica.OperatorApp/
+        Forms/  Services/  Resources/
+      ExploraNica.AdminApp/
+        Forms/  Controls/  Resources/
+\end{Verbatim}
+
+\archivo{ExploraNicaDbContext.cs} coordina el acceso a datos y las migraciones conservan la evolución del esquema. \archivo{Program.cs} de la API registra servicios y configura el procesamiento de solicitudes. Los archivos \archivo{appsettings.json} contienen las opciones de ejecución, que pueden sobrescribirse con variables de entorno. En los clientes, \archivo{Api:BaseUrl} define la dirección del servidor.
+
+\section{Módulos implementados}
+\subsection{Descripción de cada módulo: propósito, entradas y salidas}
+\begin{longtable}{@{}P{2.5cm}P{3.25cm}P{3.25cm}P{3.3cm}@{}}
+\caption{Módulos de ExploraNica.}\label{tab:modulos}\\
+\toprule Módulo & Propósito & Entradas & Salidas \\ \midrule\endfirsthead
+\toprule Módulo & Propósito & Entradas & Salidas \\ \midrule\endhead
+Autenticación & Comprobar identidad y permitir acceso según rol. & Correo y contraseña; configuración JWT. & Token firmado, vencimiento o error de credenciales. \\
+Operadores y documentos & Registrar agencias y mantener su expediente. & Datos personales y comerciales; RUC, identificación y documento institucional. & Cuenta pendiente; documentos registrados; estado y motivo de rechazo. \\
+Verificación administrativa & Revisar agencias y resolver su solicitud. & Operador seleccionado, documentos y decisión; motivo si se rechaza. & Estado aprobado o rechazado y actualización visible al operador. \\
+Catálogo de tours & Crear y actualizar las ofertas de la agencia; supervisar su activación. & Título, descripción, destino, precio y duración. & Tour registrado o actualizado; indicador de actividad. \\
+Sesiones y disponibilidad & Definir salidas y consultar los cupos. & Tour, fecha, hora, cupos y modificador de precio. & Sesión asociada al tour y disponibilidad consultable. \\
+Reservas y vouchers & Registrar reservas y validar su utilización. & Sesión, cantidad de cupos e identidad autenticada; reserva a validar. & Reserva confirmada, cupo descontado; reserva completada y voucher usado. \\
+Paneles y seguimiento & Mostrar información operativa y registrar acciones. & Listas de operadores, tours y reservas; eventos del sistema. & Conteos de control, errores correlacionados y registros de auditoría. \\
+\bottomrule
+\end{longtable}
+
+\archivo{AuthService} verifica las contraseñas con \archivo{IPasswordHasher<User>} y genera un token JWT con vencimiento. El sistema utiliza tres roles: \archivo{Admin}, \archivo{TourOperator} y \archivo{Tourist}. Los controladores restringen las operaciones por rol y los servicios resuelven la identidad autenticada para consultar o modificar los recursos asociados al usuario.
+
+\archivo{OperatorRegistrationService}, \archivo{OperatorDocumentService} y \archivo{AdminService} implementan el registro, la carga documental y la verificación administrativa. Los estados son \archivo{Pending}, \archivo{Approved} y \archivo{Rejected}. Las pantallas \archivo{UcVendors}, \archivo{VendorDetailForm}, \archivo{VendorEditForm} y \archivo{VendorDocumentsForm} permiten consultar, editar y resolver los expedientes de las agencias.
+
+\archivo{OperatorService} gestiona los tours de la agencia autenticada. \archivo{BookingService} calcula el importe de la reserva, descuenta los cupos disponibles y registra la confirmación dentro de una transacción. Durante la validación del servicio, actualiza o crea el voucher, registra su utilización y cambia la reserva a completada.
+
+\subsection{Interacción entre módulos}
+El inicio de sesión habilita las consultas del cliente y la API obtiene la identidad desde los atributos del token. La agencia se resuelve en el servidor para consultar sus tours y documentos. La creación de un tour desde el servicio del operador exige una cuenta aprobada; posteriormente se asocian sesiones y se consultan las reservas de cada salida.
+
+La validación conecta reserva, sesión, tour y operador. Antes de completar la reserva, el servicio comprueba que el tour pertenece al operador autenticado. El cambio de estado, la actualización del voucher y el evento de auditoría se guardan dentro de una transacción. Los paneles administrativos consultan operadores, tours y reservas para presentar los indicadores de seguimiento.
+
+\section{Funcionalidades implementadas}
+\subsection{Funcionalidades principales}
+Se implementaron inicio de sesión; registro de operadores por API con documentos; consulta, sustitución y reenvío de documentación; aprobación y rechazo administrativo; consulta y edición de agencias; creación y edición de tours; activación administrativa de ofertas; registro de sesiones; creación de reservas por API; consulta de reservas por sesión y validación de vouchers desde el cliente del operador.
+
+El cliente administrativo incorpora listados de operadores, tours y reservas, además de un tablero con operadores pendientes y verificados, tours activos y reservas confirmadas. El backoffice del operador organiza sus opciones en panel, tours, documentos y reservas, con navegación desde un formulario principal.
+
+\subsection{Correspondencia entre funcionalidades y el proceso propuesto}
+\begin{longtable}{@{}P{3.05cm}P{5.05cm}P{4.2cm}@{}}
+\caption{Correspondencia entre las funciones y el proceso de gestión.}\label{tab:trazabilidad}\\
+\toprule Proceso & Funcionalidad & Resultado operativo \\ \midrule\endfirsthead
+\toprule Proceso & Funcionalidad & Resultado operativo \\ \midrule\endhead
+Alta y verificación & Registro de agencias, carga documental y decisión administrativa. & Expediente con estado y motivo de rechazo cuando corresponde. \\
+Catálogo & Creación y edición de tours; activación administrativa de ofertas. & Oferta asociada a la agencia responsable. \\
+Disponibilidad & Registro de sesiones con fecha, hora y cupos. & Salidas organizadas por tour. \\
+Reserva & Creación transaccional y actualización condicionada de disponibilidad. & Reserva confirmada y cupos descontados. \\
+Validación y cierre & Comprobación de propiedad, estado de la reserva y uso del voucher. & Reserva completada y utilización registrada. \\
+Seguimiento & Conteos de operadores, tours y reservas; eventos de auditoría. & Indicadores de operación y trazabilidad de acciones. \\
+\bottomrule
+\end{longtable}
+
+Las funcionalidades siguen una secuencia operativa: registrar y verificar la agencia, mantener el catálogo, programar salidas, registrar reservas y confirmar la prestación del servicio. La API relaciona estas actividades mediante identificadores de operador, tour, sesión y reserva. Los controles de propiedad y estado conservan la continuidad del proceso entre los dos clientes de escritorio.
+
+\section{Validaciones implementadas}
+\subsection{Validaciones de datos de entrada}
+Los validadores de aplicación comprueban que las reservas indiquen una sesión y una cantidad de cupos mayor que cero. Para los tours exigen título y ubicación, ambos de hasta 250 caracteres, precio base no negativo y duración positiva. El validador de sesiones exige tour, cupos positivos y una fecha posterior a la hora UTC de referencia con tolerancia de un minuto.
+
+En el registro de operadores se normalizan los textos y se revisan campos obligatorios, formato de correo, longitudes compatibles con el modelo, contraseña de al menos ocho caracteres y unicidad de correo y RUC. El expediente requiere tres tipos documentales: RUC, identidad y constitución institucional. Los archivos se limitan a 5 MiB, se admiten PDF, PNG y JPEG y se verifica su firma binaria, además del tipo declarado. La sustitución documental no se permite si la cuenta ya está aprobada.
+
+La edición administrativa limita el nombre de agencia a 200 caracteres, el RUC a 50 y el teléfono a 50 cuando se proporciona. Un rechazo requiere motivo. Para validar un voucher, la reserva debe pertenecer al operador, estar confirmada y no haber sido utilizada. En las descargas se filtra por propietario y se devuelven nombres controlados, evitando exponer rutas internas.
+
+\subsection{Manejo de errores y mensajes de usuario}
+\archivo{ErrorHandlingMiddleware} transforma las excepciones de dominio en respuestas JSON con código, mensaje e identificador de correlación. Los errores de validación de dominio incluyen un mapa por campo. La validación automática de modelos se procesa mediante ASP.NET Core. El cliente utiliza estas respuestas para comunicar el problema y orientar la corrección de los datos.
+
+\begin{longtable}{@{}P{1.25cm}P{3.3cm}P{7.75cm}@{}}
+\caption{Códigos y mensajes de error del sistema.}\\
+\toprule HTTP & Situación & Mensaje o respuesta representativa \\ \midrule\endfirsthead
+\toprule HTTP & Situación & Mensaje o respuesta representativa \\ \midrule\endhead
+400 & Regla de negocio & ``No hay cupos suficientes para la cantidad solicitada.'' \\
+401 & Credenciales inválidas & ``Credenciales inválidas.'' \\
+403 & Operación prohibida & ``Tu cuenta debe estar aprobada para publicar tours.'' \\
+404 & Recurso inexistente & ``No se encontró el documento solicitado.'' \\
+409 & Conflicto & ``El RUC ya está registrado por otro operador.'' \\
+422 & Validación de dominio & ``El motivo de rechazo es obligatorio.'' y errores por campo. \\
+500 & Fallo no previsto & ``Ocurrió un error inesperado.'' con correlación. \\
+\bottomrule
+\end{longtable}
+
+Los clientes incorporan \archivo{UiErrorHandler} y utilidades para actualizar controles desde el hilo de interfaz. Estos componentes centralizan los mensajes de error de las operaciones asíncronas y permiten recuperar el control de la pantalla después de una excepción. La API relaciona los registros técnicos con la respuesta mediante el identificador de correlación y limita los detalles de excepciones al entorno de desarrollo.
+
+\section{Estructuras de datos y lógica de programación}
+\subsection{Estructuras de datos usadas}
+Las entidades principales son \archivo{User}, \archivo{Operator}, \archivo{OperatorDocument}, \archivo{Tour}, \archivo{TourSession}, \archivo{Booking}, \archivo{Voucher} y \archivo{AuditLog}. Los identificadores son de tipo \archivo{Guid}; los importes se calculan con valores decimales y las fechas de negocio emplean \archivo{DateTimeOffset}. Los enumerados \archivo{UserRole}, \archivo{BookingStatus} y \archivo{DocumentType} delimitan opciones conocidas.
+
+Las listas y colecciones de DTO transportan resultados a las tablas de Windows Forms. Las consultas LINQ filtran y proyectan información, con \archivo{AsNoTracking} en varias consultas de lectura. Los diccionarios \archivo{Dictionary<string,string>} asocian un campo con su error; las listas de documentos preparados permiten verificar archivos antes de escribirlos. Las relaciones entre entidades se conservan con claves foráneas y configuraciones de Entity Framework Core.
+
+La relación operador--tour y tour--sesión es de uno a muchos. La reserva referencia una sesión y un usuario. El voucher se relaciona con una reserva y registra el código, el estado de uso y la fecha de validación. Los documentos se vinculan a la agencia y se distinguen por su tipo, tamaño, formato y fecha de carga.
+
+\subsection{Lógica y algoritmos principales}
+\textbf{Creación de reserva.} El servicio abre una transacción dentro de la estrategia de reintentos de EF Core. Ejecuta una actualización condicionada que descuenta cupos únicamente cuando la sesión conserva disponibilidad suficiente. Si ninguna fila cambia, informa falta de cupo. Después carga la sesión y su tour, calcula el total, crea una reserva confirmada y confirma la transacción. Ante un fallo previo a la confirmación, el descuento no debe persistir independientemente de la reserva.
+
+El importe se obtiene mediante:
+\[
+T=\operatorname{redondear}\bigl((P_b+M_s)\,q,2\bigr),
+\]
+donde $P_b$ es el precio base, $M_s$ el modificador de la sesión y $q$ la cantidad de cupos. Por ejemplo, con precio base de 30 unidades monetarias, modificador de 5 y dos cupos, el total calculado es 70.
+
+\textbf{Validación de voucher.} Se consulta la reserva junto con su sesión, tour, operador y voucher. Se comprueba la propiedad y el estado; después se realiza un cambio condicionado de confirmado a completado. Si otra solicitud ya realizó el cambio, se rechaza una segunda validación. El voucher usado y la bitácora se guardan en la misma transacción. El control condicional evita depender únicamente de una lectura previa del estado.
+
+\textbf{Registro documental.} Primero se validan datos y archivos; después se crea usuario, operador y documentos dentro de una transacción. Si falla la persistencia, se intentan retirar los archivos escritos para no conservar documentos sin expediente. La sustitución conserva el archivo anterior hasta confirmar la nueva referencia. El servicio coordina la escritura de archivos con la persistencia del expediente para conservar su integridad.
+
+\textbf{Selección en cascada.} La pantalla de reservas carga tours, luego sesiones y finalmente reservas. Al cambiar el nivel superior se limpian las selecciones dependientes y se suprimen eventos disparados durante la recarga. El objetivo es evitar que una tabla muestre reservas de una salida distinta a la seleccionada.
+
+\section{Evidencia y funcionamiento}
+\subsection{Capturas de pantalla por módulo}
+La interfaz se organiza alrededor de las tareas del operador y del administrador. Cada pantalla mantiene un propósito definido y presenta los datos de la actividad seleccionada:
+\begin{description}
+\item[Inicio de sesión.] Formulario de correo y contraseña, validación de acceso y comunicación de errores.
+\item[Operadores.] Listado administrativo con filtros por estado, datos comerciales y acceso al expediente.
+\item[Documentos.] Consulta de RUC, identificación y documento institucional, carga de archivos y reenvío de la solicitud.
+\item[Tours.] Listado de ofertas y formulario con título, descripción, destino, precio y duración.
+\item[Sesiones.] Selección de fecha, horario, disponibilidad y modificador de precio de cada salida.
+\item[Reservas.] Selección de tour y sesión, consulta de reservas y acción de validación del voucher.
+\item[Panel administrativo.] Indicadores de operadores pendientes y verificados, tours activos y reservas confirmadas.
+\end{description}
+\evidencia{01-login.png}{Inicio de sesión}{}
+\evidencia{02-operadores.png}{Gestión administrativa de operadores}{}
+\evidencia{03-documentos.png}{Gestión documental y verificación}{}
+\evidencia{04-tours.png}{Catálogo de tours}{}
+\evidencia{05-sesiones.png}{Sesiones y disponibilidad}{}
+\evidencia{06-reservas.png}{Reservas y validación de vouchers}{}
+\evidencia{07-panel.png}{Panel administrativo}{}
+
+\subsection{Flujos de ejemplo}
+\textbf{Flujo 1: alta y revisión de una agencia.} El operador registra sus datos y los tres documentos requeridos. El sistema crea el expediente con estado pendiente. El administrador consulta los documentos y aprueba la cuenta o registra el motivo de rechazo. Si se requiere una corrección, el operador sustituye los archivos y reenvía la solicitud de verificación.
+
+\textbf{Flujo 2: publicación y programación.} Una agencia aprobada inicia sesión, crea un tour y registra una salida con diez cupos. El catálogo conserva la oferta y la sesión queda disponible para consulta. Si una cuenta pendiente intenta crear un tour desde el servicio del operador, el sistema deniega la operación y comunica que necesita aprobación.
+
+\textbf{Flujo 3: reserva y cierre.} Un usuario autenticado solicita por API dos cupos de una sesión con diez disponibles. La transacción registra la reserva confirmada y actualiza el cupo a ocho. El operador selecciona el tour y su sesión en el backoffice, consulta la reserva y valida la atención del servicio. La reserva pasa a completada y el voucher queda utilizado. Una segunda validación produce un mensaje de reutilización.
+
+\textbf{Flujo 4: control de disponibilidad.} Cuando una sesión conserva un cupo y se solicitan dos, el servicio responde que no hay disponibilidad suficiente. La actualización condicionada impide descontar una cantidad superior al cupo restante. La reserva y el descuento se ejecutan dentro de la misma transacción para conservar la consistencia de la operación.
+
+\section{Repositorio GitHub}
+\subsection{Enlace del repositorio}
+El repositorio oficial es \url{https://github.com/AJcano09/explora-nicaragua}. Contiene la solución, los proyectos de dominio y aplicación, los servicios de infraestructura, la API y ambos clientes Windows Forms \cite{ref19}. Git conserva la evolución del código y permite recuperar el estado de cada componente.
+
+La raíz reúne las instrucciones de instalación, la configuración de servicios y los scripts de preparación. El código de la aplicación se concentra en \archivo{src}, mientras \archivo{odd/tasks} organiza las tareas técnicas. Los archivos de configuración definen las opciones de cada entorno y las credenciales se suministran mediante variables de entorno o secretos de desarrollo.
+
+\subsection{Organización del repositorio e historial de cambios}
+La organización por proyectos permite localizar interfaces, entidades, servicios y clientes sin mezclar sus responsabilidades. El historial utiliza mensajes que identifican el componente y el tipo de cambio: funcionalidades, correcciones, refactorizaciones y documentación. La siguiente tabla resume los hitos principales del desarrollo.
+
+\begin{longtable}{@{}P{2.25cm}P{2cm}P{8.3cm}@{}}
+\caption{Historial de cambios de ExploraNica.}\\
+\toprule Fecha & Commit & Cambio registrado \\ \midrule\endfirsthead
+\toprule Fecha & Commit & Cambio registrado \\ \midrule\endhead
+10/10/2026 & \texttt{fe8c449} & Indicadores de tours activos y reservas confirmadas en administración. \\
+11/10/2026 & \texttt{0b21e52} & Endpoint y acción de escritorio para validar vouchers. \\
+11/10/2026 & \texttt{9f4d173} & Control de concurrencia en validación de vouchers. \\
+11/10/2026 & \texttt{96824c0} & Transacción de reserva dentro de la estrategia de ejecución. \\
+12/10/2026 & \texttt{a63af9c} & Registro público de operadores con documentación. \\
+12/10/2026 & \texttt{54ea7af} & Actualización de operadores y endpoints documentales. \\
+12/10/2026 & \texttt{88236ac} & Vistas de detalle, edición y documentos en administración. \\
+12/10/2026 & \texttt{ea75b35} & Carga y visualización documental para operadores. \\
+12/10/2026 & \texttt{75eccef} & Centralización del tratamiento de errores asíncronos de interfaz. \\
+12/10/2026 & \texttt{33ce0d8} & Traducción de mensajes visibles pendientes al español. \\
+\bottomrule
+\end{longtable}
+
+El desarrollo se realizó de forma incremental. Primero se incorporaron la gestión de tours y los indicadores administrativos; después se añadieron la validación de vouchers, los controles de concurrencia, el registro documental y las pantallas de verificación. La centralización de errores asíncronos y la traducción de mensajes completaron la integración de los clientes de escritorio.
+
+\section{Documentación técnica básica}
+\subsection{Guía de instalación y ejecución}
+\textbf{Requisitos.} Los clientes requieren Windows. El entorno de desarrollo utiliza SDK .NET 10, Git y PostgreSQL. Docker Compose permite iniciar PostgreSQL 16 y los servicios auxiliares definidos en el proyecto. La API y los dos clientes se ejecutan como procesos independientes.
+
+\textbf{Preparación.} Para una copia nueva:
+\begin{Verbatim}[fontsize=\small,breaklines=true]
+git clone https://github.com/AJcano09/explora-nicaragua.git
+cd explora-nicaragua
+dotnet restore ExploraNica.slnx
+dotnet build ExploraNica.slnx -c Release
+\end{Verbatim}
+Para trabajar con una copia existente, abrir su carpeta raíz. Con Docker Compose, copiar \archivo{.env.example} a \archivo{.env}, definir las variables de los servicios y ejecutar \archivo{docker compose up -d explora-db}. Con PostgreSQL instalado directamente, crear la base de datos y configurar la cadena de conexión. La API recibe su configuración mediante \archivo{appsettings.json} y variables de entorno; el archivo \archivo{.env} pertenece a la configuración de Docker.
+
+\textbf{Configuración de API.} Establecer \archivo{ConnectionStrings:DefaultConnection}, \archivo{Jwt:Key}, \archivo{Jwt:Issuer}, \archivo{Jwt:Audience} y \archivo{Jwt:ExpiryMinutes}. Usar secretos de desarrollo o variables de entorno con doble guion bajo, por ejemplo \archivo{ConnectionStrings__DefaultConnection}. Mantener los secretos fuera del control de versiones. La carga inicial puede crear usuarios de demostración; el hash de sus contraseñas sólo se habilita en desarrollo cuando se suministra \archivo{Seed:DevPassword}.
+
+\textbf{Base de datos.} Instalar una versión 10.x de \archivo{dotnet-ef} compatible con los paquetes Entity Framework Core 10 del proyecto. Ejecutar desde la raíz:
+\begin{Verbatim}[fontsize=\small,breaklines=true]
+dotnet ef database update --project src/Infrastructure/ExploraNica.Infrastructure --startup-project src/Presentation/ExploraNica.Api
+\end{Verbatim}
+La API también intenta migrar e inicializar datos al arrancar. Si la base de datos falla, puede mantener el proceso vivo aunque no esté listo para atender operaciones. Por eso se deben comprobar los dos endpoints de salud.
+
+\textbf{Ejecución de API y clientes.} En terminales independientes:
+\begin{Verbatim}[fontsize=\small,breaklines=true]
+dotnet run --project src/Presentation/ExploraNica.Api --launch-profile https
+dotnet run --project src/Presentation/ExploraNica.OperatorApp
+dotnet run --project src/Presentation/ExploraNica.AdminApp
+\end{Verbatim}
+El perfil HTTPS declara \url{https://localhost:7152} y el perfil HTTP \url{http://localhost:5241}. Configurar \archivo{Api:BaseUrl} de ambos clientes con la dirección elegida. En desarrollo puede ser necesario preparar el certificado local con \archivo{dotnet dev-certs https --trust}. Revisar \archivo{/health/live}, \archivo{/health/ready} y, en desarrollo, \archivo{/swagger}. El endpoint de disponibilidad debe responder satisfactoriamente antes de probar operaciones que dependan de PostgreSQL.
+
+\textbf{Verificación de instalación.} Comprobar la compilación de la solución, la aplicación de las migraciones y la disponibilidad de la base de datos. Iniciar la API y ambos clientes, verificar la dirección del servidor e iniciar sesión con el rol correspondiente. Los endpoints de salud permiten distinguir entre proceso activo y servicio listo para atender solicitudes.
+
+\subsection{Manual de usuario}
+\textbf{Acceso.} Abrir el cliente correspondiente, escribir correo y contraseña y pulsar iniciar sesión. Si aparece un error de credenciales, corregir los datos; si el problema es de conexión, comprobar la API. No compartir cuentas. Al concluir las tareas, utilizar la opción de cerrar sesión.
+
+\textbf{Operador: panel y tours.} Consultar el estado de la cuenta y el resumen disponible. En ``Mis Tours'', revisar el listado y abrir la creación o edición. Completar título, descripción, ubicación, precio y duración; guardar y comprobar que el listado refleja la modificación. La creación de ofertas exige aprobación de la agencia en el servicio correspondiente.
+
+\textbf{Operador: documentos.} Abrir la gestión documental desde el acceso disponible en el panel. Consultar los tres tipos requeridos y adjuntar el archivo correcto para cada uno. En caso de rechazo, revisar el motivo, sustituir los documentos permitidos y reenviar la solicitud. Una cuenta aprobada no admite sustitución documental en el flujo actual.
+
+\textbf{Operador: sesiones y reservas.} Seleccionar el tour y registrar la salida mediante el diálogo de sesiones. En ``Reservas'', seleccionar primero el tour y después su sesión; comprobar fecha, cupos y reserva antes de pulsar la validación. Validar sólo al verificar la atención del servicio, porque esta acción completa la reserva. El registro de reservas se realiza mediante la API.
+
+\textbf{Administrador.} Consultar el panel de control, abrir operadores, filtrar por estado y revisar datos y documentos. Aprobar tras la revisión o rechazar indicando un motivo comprensible. En tours, activar o desactivar la oferta seleccionada y confirmar el cambio. En reservas, consultar los registros globales y su estado.
+
+\textbf{Incidencias.} Anotar operación, hora e identificador de correlación cuando esté disponible. Antes de reintentar, consultar si la operación fue guardada. No adjuntar documentos personales, claves o tokens a los reportes.

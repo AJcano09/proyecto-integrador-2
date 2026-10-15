@@ -1,0 +1,116 @@
+\chapter{Conclusiones, recomendaciones y anexos}
+\label{cap:cierre}
+\section{Conclusiones}
+El proyecto traduce la necesidad de organizar la oferta turística y la gestión de agencias en un prototipo con clientes de escritorio y servicios compartidos. La relación entre operadores, tours, sesiones y reservas ofrece una base concreta para digitalizar tareas internas descritas en el diagnóstico y los procesos propuestos.
+
+Se implementaron autenticación, verificación documental, catálogo, disponibilidad, reservas y validación de vouchers. La solución utiliza .NET 10, Windows Forms, ASP.NET Core, Entity Framework Core y PostgreSQL. La organización por proyectos y las migraciones permiten mantener los componentes y la evolución del esquema de datos.
+
+La gestión interna constituye el núcleo del sistema. Las integraciones de pago, reseñas, reportes financieros y aplicación móvil conforman su ruta de ampliación. La arquitectura de servicios permite incorporar estos componentes sobre las entidades y procesos existentes, manteniendo las reglas de identidad, propiedad y estado.
+
+Las transacciones de reserva y los cambios condicionados de disponibilidad y estado aportan mecanismos concretos de integridad. La validación del voucher relaciona al operador con la reserva y registra el cierre del servicio. La correlación de errores y los eventos de auditoría facilitan el seguimiento de incidencias y operaciones críticas.
+
+Finalmente, el valor del proyecto depende de combinar desarrollo técnico con responsabilidad sobre los datos, transparencia de las decisiones e información cultural verificable. La pertinencia nacional se fortalecerá mediante participación de operadores y comunidades, documentación completa y evaluación de las necesidades reales del sector.
+
+\section{Recomendaciones}
+\begin{enumerate}
+\item Consolidar una versión de entrega identificada por commit y etiqueta. Separar configuración local de código publicado y documentar el procedimiento de actualización.
+\item Revisar permisos y pertenencia de recursos en todos los endpoints; homogeneizar validaciones y cerrar la renovación de sesión y la cancelación repetida de reservas.
+\item Incorporar pruebas automatizadas de reserva, disponibilidad y voucher. Incluir fallos de base de datos, reintentos y solicitudes concurrentes, y conservar los resultados.
+\item Mantener el manual de usuario y el registro de pruebas alineados con las funcionalidades del sistema. Utilizar datos de demostración anonimizados en la capacitación.
+\item Realizar un piloto con tareas y métricas definidas antes de valorar ahorro, satisfacción o aceptación. Recoger dificultades de conectividad y aprendizaje, además de resultados positivos.
+\item Incorporar pagos primero en entorno de prueba, con estados separados, validación de eventos, idempotencia y conciliación. Evaluar costos y disponibilidad del proveedor antes de operar.
+\item Desarrollar reportes financieros y reseñas después de estabilizar el núcleo, definiendo fuentes, reglas de cálculo, moderación y derechos de reclamación.
+\item Fortalecer respaldos de PostgreSQL y archivos documentales, recuperación y trazabilidad del usuario real. Mantener secretos fuera del repositorio y limitar la retención de documentos.
+\item Revisar accesibilidad, mensajes y representación cultural con usuarios locales. Registrar procedencia y derechos de uso de fotografías y textos de los destinos.
+\item Establecer un ciclo periódico de mantenimiento, actualización de dependencias y revisión de la información de los destinos.
+\end{enumerate}
+
+\section{Referencias bibliográficas}
+La fundamentación del sistema reúne fuentes de arquitectura de software, desarrollo de escritorio, autenticación, modelado de procesos y gestión turística.
+\begingroup
+\renewcommand{\chapter}[2]{}%
+\renewcommand{\bibname}{}%
+\begin{thebibliography}{20}
+\bibitem{ref1} Instituto Nicaragüense de Turismo. \emph{Oferta turística: agencias de viajes}. Mapa Nacional de Turismo. \url{https://www.mapanicaragua.com/oferta-turistica-agencias-de-viajes/}.
+\bibitem{ref2} Banco Central de Nicaragua. \emph{Informe de resultados de la Cuenta Satélite de Turismo de Nicaragua en 2023}. \url{https://www.bcn.gob.ni/publicaciones/informe-de-resultados-de-la-cuenta-satelite-de-turismo-de-nicaragua-en-2023}.
+\bibitem{ref3} Ries, E. (2011). \emph{The Lean Startup}. Crown Business.
+\bibitem{ref4} Osterwalder, A. y Pigneur, Y. (2010). \emph{Business Model Generation}. Wiley.
+\bibitem{ref5} React Native. \emph{Documentación oficial}. \url{https://reactnative.dev/}. 
+\bibitem{ref6} Civitatis. \emph{Proveedores: preguntas frecuentes}. \url{https://www.civitatis.com/es/proveedores/landing-preguntas-frecuentes/}.
+\bibitem{ref7} Hardt, D. (ed.) (2012). \emph{The OAuth 2.0 Authorization Framework}. RFC 6749. \url{https://www.rfc-editor.org/info/rfc6749/}.
+\bibitem{ref8} Tripadvisor (2023). \emph{Review Transparency Report}. \url{https://www.tripadvisor.com/TransparencyReport2023}.
+\bibitem{ref9} Mozilla Developer Network. \emph{Offline and background operation}. \url{https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation}.
+\bibitem{ref10} Firebase. \emph{Firebase Cloud Messaging}. \url{https://firebase.google.com/docs/cloud-messaging}.
+\bibitem{ref11} Object Management Group (2011). \emph{Business Process Model and Notation, Version 2.0}. \url{https://www.omg.org/spec/BPMN/2.0/}.
+\bibitem{ref12} Camunda. \emph{Desktop Modeler}. \url{https://docs.camunda.io/docs/components/modeler/desktop-modeler/}.
+\bibitem{ref13} Maurya, A. (2012). \emph{Running Lean}. O'Reilly Media.
+\bibitem{ref14} Fielding, R. T. (2000). \emph{Architectural Styles and the Design of Network-based Software Architectures}. Tesis doctoral, University of California, Irvine. \url{https://ics.uci.edu/~fielding/pubs/dissertation/top.htm}.
+\bibitem{ref15} Microsoft. \emph{Windows Forms overview}. \url{https://learn.microsoft.com/en-us/dotnet/desktop/winforms/overview/}.
+\bibitem{ref16} Microsoft. \emph{Documentación de .NET}. \url{https://learn.microsoft.com/dotnet/}.
+\bibitem{ref17} NIST. \emph{Role Based Access Control}. \url{https://csrc.nist.gov/projects/role-based-access-control/faqs}.
+\bibitem{ref18} Stripe. \emph{Receive Stripe events in your webhook endpoint}. \url{https://docs.stripe.com/webhooks}.
+\bibitem{ref19} ExploraNica. \emph{Repositorio oficial del sistema}. \url{https://github.com/AJcano09/explora-nicaragua}.
+\bibitem{ref20} Jones, M., Bradley, J. y Sakimura, N. (2015). \emph{JSON Web Token (JWT)}. RFC 7519. \url{https://www.rfc-editor.org/info/rfc7519/}.
+\end{thebibliography}
+\endgroup
+
+\section{Anexos}
+\subsection*{Anexo A. Matriz de verificación funcional}
+El plan de validación funcional define las operaciones principales y sus condiciones de aceptación. Cada caso establece una acción, la respuesta del sistema y la comprobación de integridad correspondiente.
+\begin{longtable}{@{}P{1cm}P{4.5cm}P{6.8cm}@{}}
+\toprule Caso & Acción & Condición de aceptación \\ \midrule\endfirsthead
+\toprule Caso & Acción & Condición de aceptación \\ \midrule\endhead
+A01 & Iniciar sesión con datos válidos e inválidos. & Acceso por rol o rechazo; captura sin credenciales y respuesta HTTP. \\
+A02 & Registrar operador con tres documentos válidos. & Cuenta pendiente y expediente completo; identificador anonimizado. \\
+A03 & Registrar correo o RUC repetido. & Conflicto controlado; sin duplicados ni archivos huérfanos. \\
+A04 & Adjuntar archivo inválido o mayor a 5 MiB. & Rechazo por campo; sin persistencia parcial. \\
+A05 & Aprobar, rechazar y reenviar una solicitud. & Estados y motivo coherentes; capturas antes y después. \\
+A06 & Crear un tour con cuenta aprobada y pendiente. & Creación permitida o denegada según ruta y permiso. \\
+A07 & Consultar y editar recursos de otra agencia. & Denegación sin exposición de datos. \\
+A08 & Reservar dos cupos de una sesión con diez. & Reserva confirmada y disponibilidad igual a ocho. \\
+A09 & Disputar concurrentemente el último cupo. & Una confirmación; otra solicitud rechazada; cupo no negativo. \\
+A10 & Validar dos veces la misma reserva. & Una transición a completada y rechazo de reutilización. \\
+A11 & Validar una reserva ajena. & Sin cambio de estado ni acceso a datos de otro operador. \\
+A12 & Cancelar repetidamente una reserva. & Probar idempotencia y cupos; registrar cualquier desviación. \\
+A13 & Interrumpir base de datos o conectividad. & Error comprensible, correlación y recuperación documentada. \\
+A14 & Comprobar vencimiento de sesión. & Solicitud de autenticación al expirar el token y acceso restablecido tras iniciar sesión. \\
+\bottomrule
+\end{longtable}
+El registro de ejecución incluye fecha, entorno, datos iniciales, pasos, resultado, responsable y evidencia. Las incidencias se relacionan con el caso que las detecta y con el cambio que las resuelve.
+
+\subsection*{Anexo B. Registro de evidencia visual}
+La documentación visual se organiza por tarea: acceso al sistema, gestión de operadores, expediente documental, catálogo de tours, sesiones, reservas y panel administrativo. Los identificadores internos de estas pantallas son FormLogin, UcVendors, OperatorDocumentsForm, OperatorToursForm, SessionDialog, OperatorBookingsForm y UcDashboard. Las imágenes de soporte se conservan en \archivo{assets/evidencias} y se vinculan con el manual de usuario.
+
+\subsection*{Anexo C. Rutas de referencia de la API}
+\begin{longtable}{@{}P{2.35cm}P{7.1cm}P{3.8cm}@{}}
+\toprule Método & Ruta & Propósito \\ \midrule\endfirsthead
+\toprule Método & Ruta & Propósito \\ \midrule\endhead
+POST & \archivo{/api/auth/login} & Inicio de sesión. \\
+POST & \archivo{/api/operators} & Registro con documentos. \\
+GET & \archivo{/api/operators/me/documents} & Expediente propio. \\
+POST & \archivo{/api/operators/me/submit-verification} & Reenvío a revisión. \\
+GET & \archivo{/api/admin/operators} & Listado administrativo. \\
+POST & \archivo{/api/admin/operators/{id}/approve} & Aprobar operador. \\
+POST & \archivo{/api/admin/operators/{id}/reject} & Rechazar con motivo. \\
+GET/POST & \archivo{/api/operator/tours} & Consultar o crear tours propios. \\
+POST & \archivo{/api/bookings} & Crear reserva autenticada. \\
+POST & \archivo{/api/operator/tours/bookings/{id}/validate} & Validar una reserva del operador. \\
+GET & \archivo{/health/live} y \archivo{/health/ready} & Salud de proceso y disponibilidad. \\
+\bottomrule
+\end{longtable}
+OpenAPI publica los contratos de la API y Swagger permite consultar las rutas durante el desarrollo. Las solicitudes de los recursos protegidos incluyen el token de acceso, los identificadores de recurso y los campos definidos por cada DTO.
+
+\subsection*{Anexo D. Glosario técnico básico}
+\begingroup\small\setlength{\parskip}{0pt}
+\begin{description}
+\setlength{\itemsep}{0.1em}
+\item[API REST.] Interfaz de servicios que expone recursos mediante operaciones HTTP.
+\item[DTO.] Objeto para transferir datos entre componentes sin exponer toda la entidad.
+\item[JWT.] Token firmado con atributos de identidad y vigencia verificables.
+\item[Idempotencia.] Propiedad por la que repetir una operación no duplica su efecto de negocio.
+\item[Migración.] Cambio versionado del esquema de base de datos.
+\item[Transacción.] Conjunto de escrituras que se confirma o revierte como una unidad.
+\item[Voucher.] Comprobante de reserva con código y registro de utilización.
+\item[Verificación documental.] Evaluación administrativa del expediente de una agencia.
+\end{description}
+\endgroup

@@ -1,0 +1,52 @@
+\begingroup
+\definecolor{PortadaAzul}{HTML}{09235B}
+\definecolor{PortadaDorado}{HTML}{E3B23C}
+\definecolor{PortadaGris}{HTML}{44474F}
+\definecolor{PortadaFondo}{HTML}{EFF3FF}
+\noindent\begin{tikzpicture}[remember picture,overlay,x=1bp,y=1bp]
+\begin{scope}[shift={(current page.south west)}]
+\node[anchor=south west,inner sep=0pt] at (0,0) {\includegraphics[width=612bp]{assets/fondo-portada-pptx.png}};
+
+\fill[PortadaAzul] (48,624) rectangle (564,744);
+\fill[PortadaDorado] (48,624) rectangle (564,628);
+\fill[white,rounded corners=5bp] (60,654) rectangle (122,730);
+\node[inner sep=0pt] at (91,692) {\includegraphics[width=48bp,height=59bp,keepaspectratio]{assets/escudo-unan.png}};
+
+\node[anchor=north west,align=left,inner sep=0pt,text=white,font=\sffamily\bfseries\fontsize{10.5bp}{13bp}\selectfont] at (136,730) {UNIVERSIDAD NACIONAL AUTÓNOMA\\DE NICARAGUA, MANAGUA};
+\node[anchor=base west,inner sep=0pt,text=white,font=\sffamily\bfseries\fontsize{14bp}{17bp}\selectfont] at (136,686) {Centro Universitario Regional de Carazo};
+\node[anchor=base west,inner sep=0pt,text=white,font=\sffamily\bfseries\fontsize{14bp}{17bp}\selectfont] at (136,665) {``Miguel Ángel Ortez''};
+\node[anchor=base west,inner sep=0pt,text=PortadaDorado,font=\sffamily\fontsize{10.7bp}{13bp}\selectfont] at (136,642) {Departamento de Ciencias Tecnológicas y Salud};
+
+\node[anchor=base,inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{27bp}{32bp}\selectfont] at (306,578) {Proyecto Integrador II};
+\node[anchor=base,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{22bp}{26bp}\selectfont] at (306,543) {Explora-Nicaragua};
+\fill[PortadaDorado] (91,500) rectangle (521,523);
+\node[inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{9.7bp}{12bp}\selectfont] at (306,511.5) {INTEGRADOR II / SEGUNDO CORTE EVALUATIVO};
+
+\node[anchor=base west,inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{14bp}{17bp}\selectfont] at (64,460) {Integrantes};
+\fill[PortadaDorado] (64,448) rectangle (174,451);
+\fill[PortadaFondo] (64,361) rectangle (548,438);
+\node[anchor=base west,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{13bp}{16bp}\selectfont] at (78,418) {Nohelia Nohemi Nicoya Bravo};
+\node[anchor=base west,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{13bp}{16bp}\selectfont] at (78,393) {Geoconda Nicole López Baltodano};
+\node[anchor=base west,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{13bp}{16bp}\selectfont] at (78,368) {Alexander José Cano Calero};
+
+\node[anchor=base west,inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{14bp}{17bp}\selectfont] at (64,331) {Datos generales};
+\fill[PortadaDorado] (64,319) rectangle (191,322);
+\fill[PortadaFondo] (64,194) rectangle (548,309);
+\fill[PortadaAzul] (64,194) rectangle (68,309);
+\foreach \coverY/\coverLabel/\coverValue in {290/Carrera:/Ingeniería en Sistemas,263/Año:/I,236/Docente:/Mg. Martha Rodríguez,209/Fecha:/Agosto 2026}{
+\node[anchor=base west,inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{11.5bp}{14bp}\selectfont] at (79,\coverY) {\coverLabel};
+\node[anchor=base west,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{12.5bp}{15bp}\selectfont] at (195,\coverY) {\coverValue};
+}
+
+\node[anchor=base west,inner sep=0pt,text=PortadaAzul,font=\sffamily\bfseries\fontsize{11.5bp}{14bp}\selectfont] at (64,162) {Componentes que contribuyen al proyecto};
+\foreach \coverX/\coverText in {64/{HISTORIA E\\IDENTIDAD\\NACIONAL},162/{INTEGRADOR II},260/{TI EN LA\\EMPRESA},358/{MATEMÁTICA\\DISCRETA},456/{PROGRAMACIÓN\\ESTRUCTURADA}}{
+\draw[PortadaAzul!45,dashed,line width=0.6bp] (\coverX,97) rectangle +(92,47);
+\node[align=center,text width=87bp,inner sep=0pt,text=PortadaGris,font=\sffamily\fontsize{8.5bp}{10.5bp}\selectfont] at (\coverX+46,120.5) {\coverText};
+}
+
+\fill[PortadaDorado] (48,71) rectangle (564,74);
+\fill[PortadaAzul] (48,47) rectangle (564,71);
+\node[inner sep=0pt,text=white,font=\sffamily\fontsize{9bp}{11bp}\selectfont] at (306,59) {UNAN-MANAGUA / CUR-CARAZO};
+\end{scope}
+\end{tikzpicture}\null\newpage
+\endgroup
